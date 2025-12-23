@@ -13,8 +13,7 @@ An Machine Learning-powered tool i built myself for automating the processing an
 
 Traditionally, patient data processing in Excel was a manual task where each row had to be reviewed individually. This tool automates that process by training a **Naive Bayes classifier** on historical Excel datasets and applying it to new datasets to predict the appropriate action (**display or delete**).
 
-### Who Uses This Tool?
-- **Document reviewers** working with large-scale patient data.
+
 
 
 ## Features
