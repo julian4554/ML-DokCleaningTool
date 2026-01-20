@@ -1,10 +1,11 @@
 # ML Patient Data Processing & Automation Tool
 
-An Machine Learning-powered tool i built myself for automating the processing and cleansing of patient data in Excel spreadsheets. Designed to replace manual document review, this software uses machine learning to determine whether an entry should be displayed ("anzeigen") or deleted ("löschen"). Our team saves a lot of time using my tool.
+A Machine Learning-powered tool i built myself for automating the processing and cleansing of patient data in Excel spreadsheets. Designed to replace manual document review, this software uses machine learning to determine whether an entry should be displayed ("anzeigen") or deleted ("löschen"). Our team saves a lot of time using my tool.
 
 ## Table of Contents
 - [Overview](#overview)
 - [Features](#features)
+- [Requirements](#requirements)
 - [Technical Details](#technical-details)
 - [Example Workflow](#example-workflow)
 - [Changelog](#changelog)
@@ -30,6 +31,18 @@ Traditionally, patient data processing in Excel was a manual task where each row
 ✅ **Scalability** – Optimized to handle **10,000+ rows** efficiently.
 
 ✅ **JSON Data Export** – Processed results can be saved in **JSON format** for integration with other systems.
+
+## Requirements
+
+```
+pandas>=2.0.0
+scikit-learn>=1.3.0
+PyQt5>=5.15.0
+openpyxl>=3.1.0
+joblib>=1.3.0
+```
+
+Install with: `pip install -r requirements.txt`
 
 ## Technical Details
 
