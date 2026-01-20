@@ -7,6 +7,7 @@ An Machine Learning-powered tool i built myself for automating the processing an
 - [Features](#features)
 - [Technical Details](#technical-details)
 - [Example Workflow](#example-workflow)
+- [Changelog](#changelog)
 - [Lizenz](#Lizenz)
 
 ## Overview
@@ -32,25 +33,22 @@ Traditionally, patient data processing in Excel was a manual task where each row
 
 ## Technical Details
 
-The software is structured into three main components:
+The software is structured into two main components:
 
-### **1️⃣ GUI** (Graphical User Interface)
-![image](https://github.com/user-attachments/assets/493a2868-0ed0-430a-bb44-6163addf3f83)
+### **1️⃣ Entry Point**
+- `main.py` – Application entry point with GUI launcher.
 
-- Located in the `GUI/` directory.
-- Includes `main_gui.py` for launching the user interface.
-- Uses custom icons (`.ico`, `.jpg`).
-
-### **2️⃣ Core Processing (`src/` directory)**
-- `main.py` – Central control module.
+### **2️⃣ Core Modules (`SRC/` directory)**
+- `gui.py` – Graphical user interface for non-technical users.
+- `processor.py` – Central processing orchestration.
 - `data_loader.py` – Loads patient data from Excel files.
 - `training.py` – Trains the model using labeled historical data.
 - `predict.py` – Applies the trained Naive Bayes model to classify new data.
 - `text_processing.py` – Handles **text normalization** (e.g., `ae` → `ä`).
-
-### **3️⃣ Additional Processing (`srcDokListen/` directory)**
 - `excel_analyser.py` – Analyzes titles and groups similar patient data entries.
-- `json_writer.py` – Enables better readability for subtasks as JSON.
+- `json_writer.py` – Exports processed results as JSON.
+- `pre_settings.py` – Configuration and preprocessing settings.
+- `exceptions.py` – Custom exception handling.
 
 
 ## Example Workflow
@@ -69,8 +67,23 @@ The software is structured into three main components:
 
 - Final results can be **saved back to Excel** 
 
+## Changelog
+
+### v2.0.0 (Januar 2026)
+- **Projektstruktur überarbeitet** – Alle Module in `SRC/` konsolidiert
+- **Neuer Entry Point** – `main.py` im Root-Verzeichnis
+- **GUI integriert** – GUI-Modul in Core-Module verschoben
+- **Processor-Modul** – Neue zentrale Verarbeitungslogik
+- **Exception Handling** – Eigene Exception-Klassen hinzugefügt
+- **Dependencies** – `requirements.txt` hinzugefügt
+
+### v1.0.0 (Initial Release)
+- Erste Version mit Naive Bayes Klassifikator
+- Excel-Verarbeitung und Text-Normalisierung
+- Grundlegende GUI
+
 ## Lizenz
 
-Der Quellcode dieses Projekts ist **nicht zur Wiederverwendung freigegeben**.  
+Der Quellcode dieses Projekts ist **nicht zur Wiederverwendung freigegeben**.
 Er darf **ausschließlich zu Demonstrations- und Informationszwecken gelesen**, aber **nicht kopiert, verändert oder verwendet** werden.  
 
