@@ -1,7 +1,16 @@
-import pandas as pd
-from .text_processing import adjust_text
-from .pre_settings import apply_pre_settings
+"""
+Vorhersage-Modul für das ML-DokCleaningTool.
+
+Dieses Modul enthält Funktionen zur Vorhersage von Klassifikationen
+für neue Dokumente unter Verwendung des trainierten Modells.
+"""
+
 import logging
+
+import pandas as pd
+
+from src.text_processing import adjust_text
+from src.pre_settings import apply_pre_settings
 
 
 logger = logging.getLogger(__name__)

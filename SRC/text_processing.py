@@ -1,3 +1,10 @@
+"""
+Text-Processing-Modul für das ML-DokCleaningTool.
+
+Dieses Modul enthält Funktionen zur Textvorverarbeitung und -bereinigung,
+einschließlich Umlaut-Ersetzung und Textformatierung.
+"""
+
 import re
 
 

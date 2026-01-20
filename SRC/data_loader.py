@@ -1,9 +1,14 @@
-import os
-import pandas as pd
+"""
+Data-Loader-Modul für das ML-DokCleaningTool.
+
+Dieses Modul enthält Funktionen und Konstanten für das Laden
+und Speichern von Daten sowie die Definition der Verzeichnisstruktur.
+"""
+
 import logging
+import os
 
-# Configure logging
-
+import pandas as pd
 
 # Determine the base directory relative to the current script location
 BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data'))

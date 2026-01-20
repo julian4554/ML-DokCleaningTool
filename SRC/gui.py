@@ -1,15 +1,25 @@
+"""
+GUI-Modul für das ML-DokCleaningTool.
+
+Dieses Modul enthält ausschließlich die PyQt5-basierte Benutzeroberfläche.
+Die Business-Logik wird über das processor-Modul aufgerufen.
+"""
+
 import json
+import logging
 import os
 import shutil
 import sys
-import logging
 
-from PyQt5.QtWidgets import (QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QListWidget,
-                             QMessageBox, QTextEdit, QLabel, QSplashScreen, QProgressBar)
+from PyQt5.QtWidgets import (
+    QApplication, QWidget, QVBoxLayout, QHBoxLayout, QPushButton,
+    QFileDialog, QListWidget, QMessageBox, QTextEdit, QLabel,
+    QSplashScreen, QProgressBar
+)
 from PyQt5.QtGui import QFont, QPixmap, QIcon
 from PyQt5.QtCore import Qt, QTimer
 
-from srcDokListen.main import main as srcDokListen_main
+from src.exceptions import ProcessingError, FileLoadError, ModelError, ClassificationError
 
 # Constants
 WINDOW_X, WINDOW_Y = 100, 100
@@ -29,22 +39,48 @@ logging.basicConfig(
 
 
 def get_icon_path(filename):
-    base_path = getattr(sys, '_MEIPASS', os.path.dirname(os.path.abspath(__file__)))
+    """
+    Ermittelt den Pfad zu Icon-Dateien.
+
+    Unterstützt sowohl normale Ausführung als auch PyInstaller-Bundles.
+
+    Args:
+        filename (str): Name der Icon-Datei.
+
+    Returns:
+        str: Vollständiger Pfad zur Icon-Datei.
+    """
+    if getattr(sys, '_MEIPASS', None):
+        base_path = sys._MEIPASS
+    else:
+        # Im Entwicklungsmodus: Projektverzeichnis verwenden
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     return os.path.join(base_path, filename)
 
 
 class SplashScreen(QSplashScreen):
+    """Splash-Screen für den Anwendungsstart."""
+
     def __init__(self):
+        """Initialisiert den Splash-Screen mit Icon und Bild."""
         super().__init__()
-        icon_path = get_icon_path('GUI/ai_excel_analysis_icon.ico')
+        icon_path = get_icon_path('assets/ai_excel_analysis_icon.ico')
         self.setWindowIcon(QIcon(icon_path))
-        icon_path = get_icon_path('ai_excel_analysis_icon-5.jpg')
-        self.setPixmap(QPixmap(icon_path))
+        splash_path = get_icon_path('assets/ai_excel_analysis_icon-5.jpg')
+        self.setPixmap(QPixmap(splash_path))
         self.setWindowFlags(Qt.WindowStaysOnTopHint | Qt.FramelessWindowHint)
 
 
 class JsonDisplayWindow(QWidget):
+    """Fenster zur Anzeige von JSON-Ergebnissen."""
+
     def __init__(self, json_data):
+        """
+        Initialisiert das JSON-Anzeigefenster.
+
+        Args:
+            json_data (str): Die anzuzeigenden JSON-Daten als String.
+        """
         super().__init__()
         self.json_data = json_data
         self.initUI()
@@ -74,12 +110,15 @@ class JsonDisplayWindow(QWidget):
 
 
 class AnalyzerGUI(QWidget):
+    """Hauptfenster der Anwendung für Dokumentenanalyse."""
+
     def __init__(self):
+        """Initialisiert das Hauptfenster der Anwendung."""
         super().__init__()
         self.json_window = None
         self.analyzedFilePath = ""
         self.temp_files = []
-        icon_path = get_icon_path('GUI/ai_excel_analysis_icon.ico')
+        icon_path = get_icon_path('assets/ai_excel_analysis_icon.ico')
         self.setWindowIcon(QIcon(icon_path))
         self.initUI()
 
@@ -192,46 +231,71 @@ class AnalyzerGUI(QWidget):
         self.progress_callback(0)
 
     def analyzeDok(self):
+        """Führt die DokListen-Analyse durch (delegiert an processor)."""
+        from src.processor import process_dok_listen
+
         try:
             file_path = self.fileList.item(0).text()
-            srcDokListen_main(file_path)
-            self.display_json_result()
-        except FileNotFoundError:
-            self.show_error_message("The JSON file could not be found.")
-        except json.JSONDecodeError:
-            self.show_error_message("Failed to decode JSON.")
-        except Exception as e:
-            self.show_error_message(f"An unexpected error occurred: {e}")
+            results = process_dok_listen(file_path, OUTPUT_FILE)
+            self.display_json_result(results)
+        except FileLoadError as e:
+            self.show_error_message(f"Dateifehler: {e}")
+        except ProcessingError as e:
+            self.show_error_message(f"Verarbeitungsfehler: {e}")
 
     def show_error_message(self, message):
-        QMessageBox.critical(self, "Error", message)
+        """Zeigt eine benutzerfreundliche Fehlermeldung an."""
+        QMessageBox.critical(self, "Fehler", str(message))
 
-    def display_json_result(self):
+    def display_json_result(self, results: dict = None):
+        """
+        Zeigt die JSON-Ergebnisse in einem separaten Fenster an.
+
+        Args:
+            results (dict): Die anzuzeigenden Ergebnisse. Falls None,
+                           wird aus OUTPUT_FILE gelesen.
+        """
         try:
-            with open(OUTPUT_FILE, 'r', encoding='utf-8') as file:
-                json_data = json.load(file)
-                formatted_json = json.dumps(json_data, indent=4, ensure_ascii=False)
+            if results is None:
+                with open(OUTPUT_FILE, 'r', encoding='utf-8') as file:
+                    results = json.load(file)
+
+            formatted_json = json.dumps(results, indent=4, ensure_ascii=False)
             self.json_window = JsonDisplayWindow(formatted_json)
             self.json_window.show()
         except Exception as e:
-            self.show_error_message(f"Failed to display JSON result: {e}")
+            self.show_error_message(f"Fehler bei der Ergebnisanzeige: {e}")
 
     def progress_callback(self, value):
         self.progressBar.setValue(value)
 
     def analyzeOrbis(self):
-        from src.main import main as src_main
+        """Führt die Orbis-Dokumentenanalyse durch (delegiert an processor)."""
+        from src.processor import process_file
+
         try:
             file_path = self.fileList.item(0).text()
-            temp_file_path = src_main(file_path)
-            logging.info(f"Temporary file path: {temp_file_path}")
+            temp_file_path = process_file(file_path, gui=self)
+            logging.info(f"Ergebnis gespeichert in: {temp_file_path}")
             self.analyzedFilePath = temp_file_path
             self.temp_files.append(temp_file_path)
-            self.progress_callback(100)
-            QMessageBox.information(self, "Analysis Complete", "Orbis analysis is done.")
+            QMessageBox.information(
+                self, "Analyse abgeschlossen",
+                "Die Orbis-Analyse wurde erfolgreich durchgeführt."
+            )
             self.downloadBtn.setEnabled(True)
-        except Exception as e:
-            self.show_error_message(f"An error occurred during analysis: {e}")
+        except FileLoadError as e:
+            self.progress_callback(0)
+            self.show_error_message(f"Dateifehler: {e}")
+        except ModelError as e:
+            self.progress_callback(0)
+            self.show_error_message(f"Modellfehler: {e}")
+        except ClassificationError as e:
+            self.progress_callback(0)
+            self.show_error_message(f"Klassifikationsfehler: {e}")
+        except ProcessingError as e:
+            self.progress_callback(0)
+            self.show_error_message(f"Verarbeitungsfehler: {e}")
 
     def downloadFile(self):
         if self.analyzedFilePath:
@@ -242,14 +306,3 @@ class AnalyzerGUI(QWidget):
                     QMessageBox.information(self, "Download Complete", f"File has been saved to {destination}")
                 except Exception as e:
                     self.show_error_message(f"Failed to save file: {e}")
-
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    splash = SplashScreen()
-    splash.show()
-    app.processEvents()
-    ex = AnalyzerGUI()
-    QTimer.singleShot(3000, splash.close)
-    QTimer.singleShot(3000, ex.show)
-    sys.exit(app.exec_())

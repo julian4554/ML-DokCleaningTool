@@ -1,10 +1,28 @@
-import os
-import pandas as pd
+"""
+Training-Modul für das ML-DokCleaningTool.
+
+Dieses Modul enthält Funktionen zum Laden und Vorbereiten von Trainingsdaten,
+zum Trainieren des Multinomial Naive Bayes Klassifikationsmodells
+und zur Evaluation der Modellgenauigkeit.
+
+Neu: Model-Caching mit joblib für schnelleren Anwendungsstart.
+"""
+
 import logging
+import os
+from pathlib import Path
+
+import joblib
+import pandas as pd
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.model_selection import GridSearchCV, train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import GridSearchCV, train_test_split
+from sklearn.naive_bayes import MultinomialNB
+
+# Pfad für gecachte Modelle
+MODEL_CACHE_DIR = Path(__file__).parent.parent / "models"
+MODEL_FILE = MODEL_CACHE_DIR / "classifier_model.joblib"
+VECTORIZER_FILE = MODEL_CACHE_DIR / "vectorizer.joblib"
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -114,6 +132,81 @@ def evaluate_model(model, vectorizer, all_X, all_y):
     # Calculate the accuracy of the model
     accuracy = accuracy_score(y_test, y_pred)
     logging.info(f"Model accuracy: {accuracy * 100:.2f}%")
+
+
+def save_model(model, vectorizer):
+    """
+    Speichert das trainierte Modell und den Vectorizer auf der Festplatte.
+
+    Args:
+        model: Das trainierte Klassifikationsmodell.
+        vectorizer: Der gefittete CountVectorizer.
+
+    Returns:
+        bool: True wenn erfolgreich gespeichert, False bei Fehler.
+    """
+    try:
+        MODEL_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+        joblib.dump(model, MODEL_FILE)
+        joblib.dump(vectorizer, VECTORIZER_FILE)
+        logging.info(f"Modell gespeichert in {MODEL_CACHE_DIR}")
+        return True
+    except Exception as e:
+        logging.error(f"Fehler beim Speichern des Modells: {e}")
+        return False
+
+
+def load_model():
+    """
+    Lädt ein zuvor gespeichertes Modell und Vectorizer von der Festplatte.
+
+    Returns:
+        tuple: (model, vectorizer) wenn erfolgreich, (None, None) wenn nicht vorhanden.
+    """
+    if MODEL_FILE.exists() and VECTORIZER_FILE.exists():
+        try:
+            model = joblib.load(MODEL_FILE)
+            vectorizer = joblib.load(VECTORIZER_FILE)
+            logging.info("Gecachtes Modell erfolgreich geladen")
+            return model, vectorizer
+        except Exception as e:
+            logging.warning(f"Fehler beim Laden des gecachten Modells: {e}")
+            return None, None
+    return None, None
+
+
+def get_model(training_data_folder):
+    """
+    Holt das Modell - entweder aus dem Cache oder trainiert neu.
+
+    Diese Funktion prüft zuerst, ob ein gecachtes Modell existiert.
+    Falls ja, wird dieses geladen. Falls nein, wird ein neues Modell
+    trainiert und für zukünftige Verwendung gespeichert.
+
+    Args:
+        training_data_folder (str): Pfad zum Ordner mit Trainingsdaten.
+
+    Returns:
+        tuple: (model, vectorizer) - Das Klassifikationsmodell und der Vectorizer.
+    """
+    # Versuche gecachtes Modell zu laden
+    model, vectorizer = load_model()
+    if model is not None and vectorizer is not None:
+        return model, vectorizer
+
+    # Kein Cache vorhanden - neu trainieren
+    logging.info("Kein gecachtes Modell gefunden, starte Training...")
+    all_X, all_y = load_and_prepare_data(training_data_folder)
+
+    if not all_X or not all_y:
+        raise ValueError("Keine Trainingsdaten gefunden")
+
+    model, vectorizer = train_model(all_X, all_y)
+
+    # Modell für nächsten Start cachen
+    save_model(model, vectorizer)
+
+    return model, vectorizer
 
 
 

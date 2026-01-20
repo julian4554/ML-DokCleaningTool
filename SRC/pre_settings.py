@@ -1,15 +1,26 @@
+"""
+Pre-Settings-Modul für das ML-DokCleaningTool.
+
+Dieses Modul enthält vordefinierte Schlüsselwörter und Funktionen
+für die regelbasierte Vorfilterung von Dokumenten.
+"""
+
 import logging
 
 # Voreingestellte Keywords, die auf die Daten angewendet werden sollen
-KeyNichtAnalysieren = [
-    "Procedere", "Fragestellung", "extern", "empfehlung", "empfehlungen", "prozedere", "prozedur", "prozeduren",
-    "ICD10", "ICD11", "ICD12"
+KEYWORDS_NICHT_ANALYSIEREN = [
+    "Procedere", "Fragestellung", "extern", "empfehlung", "empfehlungen",
+    "prozedere", "prozedur", "prozeduren", "ICD10", "ICD11", "ICD12"
 ]
 
-KeyLöschen = [
-    "historie", "datum", "kommentar", "Mitarbeiter", "histologie", "gewuenschte",
-    "kostenuebernahme", "status", "versicherung"
+KEYWORDS_LOESCHEN = [
+    "historie", "datum", "kommentar", "Mitarbeiter", "histologie",
+    "gewuenschte", "kostenuebernahme", "status", "versicherung"
 ]
+
+# Backwards-compatibility aliases
+KeyNichtAnalysieren = KEYWORDS_NICHT_ANALYSIEREN
+KeyLöschen = KEYWORDS_LOESCHEN
 
 
 def apply_pre_settings(df, column='TitelDB'):
